@@ -50,7 +50,6 @@ const SideStatsForCity = ({ cityWeather }: { cityWeather: CurrentWeather }) => {
   );
 };
 
-// Sortable Item Component
 const SortableCityCard = ({ cityWeather }: { cityWeather: CityWeather }) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: cityWeather.city });
@@ -94,7 +93,12 @@ const SortableCityCard = ({ cityWeather }: { cityWeather: CityWeather }) => {
             </div>
           </div>
           <div
-            onClick={() => handleDeleteCity(cityWeather.city)}
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleDeleteCity(cityWeather.city);
+            }}
             className="p-2 border border-solid rounded-md border-red-500 h-fit cursor-pointer"
           >
             <Trash className="text-red-500" size={20} />
