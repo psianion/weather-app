@@ -32,8 +32,8 @@ export function aggregateDailyForecast(
     {}
   );
 
-  const dailyForecasts: DailyForecast[] = Object.entries(dailyData).map(
-    ([date, values]) => {
+  const dailyForecasts: DailyForecast[] = Object.entries(dailyData)
+    .map(([date, values]) => {
       const condition = Object.entries(values.conditions).reduce(
         (a, b) => (b[1] > a[1] ? b : a),
         ["", 0]
@@ -51,8 +51,8 @@ export function aggregateDailyForecast(
         condition,
         icon,
       };
-    }
-  );
+    })
+    .slice(0, 5);
 
   return dailyForecasts;
 }
