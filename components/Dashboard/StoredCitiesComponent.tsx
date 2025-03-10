@@ -5,7 +5,6 @@ import { CurrentWeather, ForecastData } from "@/lib/types";
 import { useLocalStorageCities } from "../hooks/useLocalStorageCities";
 import ForecastDataComponent from "./ForecastData";
 import { RenderWeatherIcon } from "../util/RenderWatherIcon";
-import SelectedCityStats from "./SelectedCityStats";
 import { Thermometer, Trash, Waves, Wind } from "lucide-react";
 
 interface CityWeather {

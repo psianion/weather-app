@@ -6,6 +6,9 @@ export interface CurrentWeather {
     humidity: number;
     pressure: number;
   };
+  sys: {
+    country: string;
+  };
   weather: Array<{
     main: string;
     description: string;
@@ -26,6 +29,7 @@ export interface ForecastItem {
   weather: Array<{
     description: string;
     icon: string;
+    main: string;
   }>;
 }
 
