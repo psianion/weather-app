@@ -10,8 +10,8 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Sainayan's Portfolio",
-  description: "Developer Portfolio for Sainayan Mahto",
+  title: "Sainayan's Weather App",
+  description: "Assignment Project by Sainayan Mahto",
 };
 
 export default function RootLayout({
