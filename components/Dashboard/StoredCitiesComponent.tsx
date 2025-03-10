@@ -1,5 +1,7 @@
-// src/components/RecentCitiesWeather.tsx
 import { useEffect, useState } from "react";
+import { DndContext, DragEndEvent, closestCenter } from "@dnd-kit/core";
+import { SortableContext, arrayMove, useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { fetchCurrentWeather, fetchForecast } from "@/services/weatherService";
 import { CurrentWeather, ForecastData } from "@/lib/types";
 import { useLocalStorageCities } from "../hooks/useLocalStorageCities";
@@ -48,12 +50,15 @@ const SideStatsForCity = ({ cityWeather }: { cityWeather: CurrentWeather }) => {
   );
 };
 
-export function RecentCitiesWeather() {
-  const cities = useLocalStorageCities();
-  const [data, setData] = useState<CityWeather[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+// Sortable Item Component
+const SortableCityCard = ({ cityWeather }: { cityWeather: CityWeather }) => {
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({ id: cityWeather.city });
 
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
   const handleDeleteCity = (city: string) => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("recentCities");
@@ -64,6 +69,58 @@ export function RecentCitiesWeather() {
       localStorage.setItem("recentCities", JSON.stringify(citiesArray));
       window.dispatchEvent(new Event("recentCitiesChanged"));
     }
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className="flex items-center gap-2 w-full border border-solid rounded-sm p-2 lg:flex-row flex-col  shadow-md cursor-grab"
+    >
+      <div className="w-full md:w-1/2 flex flex-col gap-2">
+        <div className="w-full flex justify-between">
+          <div className="flex gap-2 items-center">
+            <RenderWeatherIcon
+              iconCode={cityWeather.currentData.weather[0].icon}
+              size={40}
+            />
+            <div className="flex flex-col">
+              <p className="font-semibold text-xl">{`${cityWeather.city}, ${cityWeather.currentData.sys.country}`}</p>
+              <p className="font-light capitalize text-sm">
+                {cityWeather.currentData.weather[0].description}
+              </p>
+            </div>
+          </div>
+          <div
+            onClick={() => handleDeleteCity(cityWeather.city)}
+            className="p-2 border border-solid rounded-md border-red-500 h-fit cursor-pointer"
+          >
+            <Trash className="text-red-500" size={20} />
+          </div>
+        </div>
+        <SideStatsForCity cityWeather={cityWeather.currentData} />
+      </div>
+      <ForecastDataComponent forecastData={cityWeather.forecastData} />
+    </div>
+  );
+};
+
+export function RecentCitiesWeather() {
+  const cities = useLocalStorageCities();
+  const [data, setData] = useState<CityWeather[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = data.findIndex((item) => item.city === active.id);
+    const newIndex = data.findIndex((item) => item.city === over.id);
+    const newData = arrayMove(data, oldIndex, newIndex);
+    setData(newData);
   };
 
   useEffect(() => {
@@ -113,39 +170,17 @@ export function RecentCitiesWeather() {
     );
 
   return (
-    <div className="flex flex-col gap-2">
-      {data.map((cityWeather, index) => (
-        <div
-          key={index}
-          className="flex items-center gap-2 w-full border border-solid rounded-sm p-2 lg:flex-row flex-col"
-        >
-          <div className="w-full md:w-1/2 flex flex-col gap-2">
-            <div className="w-full flex justify-between">
-              <div className="flex gap-2 items-center">
-                <RenderWeatherIcon
-                  iconCode={cityWeather.currentData.weather[0].icon}
-                  size={40}
-                />
-                <div className="flex flex-col">
-                  <p className="font-semibold text-xl">{`${cityWeather.city}, ${cityWeather.currentData.sys.country}`}</p>
-                  <p className="font-light capitalize text-sm">
-                    {cityWeather.currentData.weather[0].description}
-                  </p>
-                </div>
-              </div>
-              <div
-                onClick={() => handleDeleteCity(cityWeather.city)}
-                className="p-2 border border-solid rounded-md border-red-500 h-fit cursor-pointer"
-              >
-                <Trash className=" text-red-500" size={20} />
-              </div>
-            </div>
-            {/* <SelectedCityStats data={cityWeather.currentData} /> */}
-            <SideStatsForCity cityWeather={cityWeather.currentData} />
-          </div>
-          <ForecastDataComponent forecastData={cityWeather.forecastData} />
+    <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <SortableContext items={data.map((item) => item.city)}>
+        <div className="flex flex-col gap-2">
+          {data.map((cityWeather) => (
+            <SortableCityCard
+              key={cityWeather.city}
+              cityWeather={cityWeather}
+            />
+          ))}
         </div>
-      ))}
-    </div>
+      </SortableContext>
+    </DndContext>
   );
 }
